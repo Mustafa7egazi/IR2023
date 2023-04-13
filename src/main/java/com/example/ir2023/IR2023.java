@@ -15,6 +15,7 @@ public class IR2023 extends Application {
         Scene scene = new Scene(fxmlLoader.load(), 1000, 600);
         stage.setTitle("!Google");
         stage.setScene(scene);
+        stage.setResizable(false);
         stage.show();
     }
 

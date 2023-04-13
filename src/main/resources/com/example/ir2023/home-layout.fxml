@@ -26,19 +26,19 @@
             <Font name="Ubuntu Bold" size="32.0" />
          </font>
       </Text>
-      <TabPane layoutX="51.0" layoutY="96.0" prefHeight="368.0" prefWidth="900.0" tabClosingPolicy="UNAVAILABLE">
+      <TabPane layoutX="51.0" layoutY="96.0" prefHeight="368.0" prefWidth="900.0" style="-fx-tab-min-width: 428; -fx-tab-min-height: 40;" tabClosingPolicy="UNAVAILABLE">
         <tabs>
           <Tab text="Indexing">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" style="-fx-background-color: #454545;">
                      <children>
-                        <Label layoutX="123.0" layoutY="97.0" text="Choose Index" textFill="#f89e1f">
+                        <Label layoutX="123.0" layoutY="63.0" text="Choose Index" textFill="#f89e1f">
                            <font>
                               <Font name="Ubuntu Bold" size="20.0" />
                            </font>
                         </Label>
-                        <Separator layoutX="447.0" layoutY="69.0" orientation="VERTICAL" prefHeight="200.0" />
-                        <ChoiceBox fx:id="indexingIdexChoiceBox" layoutX="123.0" layoutY="157.0" prefHeight="24.0" prefWidth="182.0">
+                        <Separator layoutX="447.0" layoutY="39.0" orientation="VERTICAL" prefHeight="200.0" />
+                        <ChoiceBox fx:id="indexingIdexChoiceBox" layoutX="123.0" layoutY="127.0" prefHeight="24.0" prefWidth="182.0">
                            <cursor>
                               <Cursor fx:constant="HAND" />
                            </cursor>
@@ -50,12 +50,12 @@
                               </DropShadow>
                            </effect>
                         </ChoiceBox>
-                        <Label layoutX="523.0" layoutY="97.0" text="Pre-Processing" textFill="#f89e1f">
+                        <Label layoutX="520.0" layoutY="63.0" text="Pre-Processing" textFill="#f89e1f">
                            <font>
                               <Font name="Ubuntu Bold" size="20.0" />
                            </font>
                         </Label>
-                        <CheckBox fx:id="indexingTokenizationCBox" layoutX="523.0" layoutY="139.0" mnemonicParsing="false" text="Tokenization" textAlignment="CENTER" textFill="WHITE">
+                        <CheckBox fx:id="indexingTokenizationCBox" layoutX="520.0" layoutY="100.0" mnemonicParsing="false" onAction="#onCheckBoxChange" text="Tokenization" textAlignment="CENTER" textFill="WHITE">
                            <font>
                               <Font name="Ubuntu Bold" size="16.0" />
                            </font>
@@ -63,7 +63,7 @@
                               <DropShadow />
                            </effect>
                         </CheckBox>
-                        <CheckBox fx:id="indexingNormalizationCBox" layoutX="523.0" layoutY="181.0" mnemonicParsing="false" text="Normalization" textAlignment="CENTER" textFill="WHITE">
+                        <CheckBox fx:id="indexingNormalizationCBox" layoutX="520.0" layoutY="142.0" mnemonicParsing="false" onAction="#onCheckBoxChange" text="Normalization" textAlignment="CENTER" textFill="WHITE">
                            <font>
                               <Font name="Ubuntu Bold" size="16.0" />
                            </font>
@@ -71,7 +71,7 @@
                               <DropShadow />
                            </effect>
                         </CheckBox>
-                        <CheckBox fx:id="indexingStemmingCBox" layoutX="523.0" layoutY="219.0" mnemonicParsing="false" text="Stemming" textAlignment="CENTER" textFill="WHITE">
+                        <CheckBox fx:id="indexingStemmingCBox" layoutX="520.0" layoutY="180.0" mnemonicParsing="false" onAction="#onCheckBoxChange" text="Stemming" textAlignment="CENTER" textFill="WHITE">
                            <font>
                               <Font name="Ubuntu Bold" size="16.0" />
                            </font>
@@ -79,7 +79,7 @@
                               <DropShadow />
                            </effect>
                         </CheckBox>
-                        <CheckBox fx:id="indexingLemetizationCBox" layoutX="695.0" layoutY="139.0" mnemonicParsing="false" text="Lemetization" textAlignment="CENTER" textFill="WHITE">
+                        <CheckBox fx:id="indexingLemetizationCBox" layoutX="692.0" layoutY="100.0" mnemonicParsing="false" onAction="#onCheckBoxChange" text="Lemetization" textAlignment="CENTER" textFill="WHITE">
                            <font>
                               <Font name="Ubuntu Bold" size="16.0" />
                            </font>
@@ -87,7 +87,7 @@
                               <DropShadow />
                            </effect>
                         </CheckBox>
-                        <CheckBox fx:id="indexingStopWordsCBox" layoutX="695.0" layoutY="181.0" mnemonicParsing="false" text="Stop words" textAlignment="CENTER" textFill="WHITE">
+                        <CheckBox fx:id="indexingStopWordsCBox" layoutX="692.0" layoutY="142.0" mnemonicParsing="false" onAction="#onCheckBoxChange" text="Stop words" textAlignment="CENTER" textFill="WHITE">
                            <font>
                               <Font name="Ubuntu Bold" size="16.0" />
                            </font>
@@ -95,6 +95,14 @@
                               <DropShadow />
                            </effect>
                         </CheckBox>
+                        <Button layoutX="372.0" layoutY="265.0" mnemonicParsing="false" onAction="#onFinishBtnClick" prefHeight="45.0" prefWidth="150.0" style="-fx-background-color: #FF8400;" text="Finish" textFill="WHITE">
+                           <font>
+                              <Font name="Ubuntu Bold" size="18.0" />
+                           </font>
+                           <cursor>
+                              <Cursor fx:constant="HAND" />
+                           </cursor>
+                        </Button>
                      </children>
                   </AnchorPane>
             </content>

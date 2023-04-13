@@ -14,10 +14,7 @@ import java.io.IOException;
 public class IR2023Controller {
     @FXML
     private AnchorPane welcomePage;
-
-    @FXML
-    private Button GettingStartedBtn;
-
+    
     @FXML
     void onGettingStartedClicked(ActionEvent event) throws IOException {
 
@@ -27,6 +24,8 @@ public class IR2023Controller {
         Scene scene = new Scene(fxmlLoader.load(), 1000, 553);
         homeStage.setTitle("!Google");
         homeStage.setScene(scene);
+        homeStage.setResizable(false);
+        homeStage.setAlwaysOnTop(true);
         homeStage.show();
     }
 }
