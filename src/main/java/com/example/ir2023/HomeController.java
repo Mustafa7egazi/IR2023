@@ -9,12 +9,24 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class HomeController implements Initializable {
+
+    TermDocumentMatrix algo;
+
+    {
+        try {
+            algo = new TermDocumentMatrix();
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+    }
 
     private final ArrayList<String> preprocessing = new ArrayList<>();
     private final ArrayList<CheckBox> checkBoxes = new ArrayList<>();
@@ -57,11 +69,21 @@ public class HomeController implements Initializable {
     }
 
     @FXML
-    void onSearchBtnClick() {
+    void onSearchBtnClick() throws FileNotFoundException {
 
-        String searchText = searchField.getText();
-        System.out.println(searchText);
-
+        String searchText = searchField.getText().toLowerCase();
+        String [] split = searchText.split(" ");
+        if (split.length == 3){
+            algo.booleanSearch(searchText);
+        }else if (split.length == 1){
+            if (algo.oneWordSearch(searchText).isEmpty()){
+                System.out.println("Not Found!");
+            }else {
+                System.out.println(algo.oneWordSearch(searchText));
+            }
+        }else {
+            System.out.println("Unsupported query !!");
+        }
     }
 
     @Override
@@ -79,6 +101,12 @@ public class HomeController implements Initializable {
         checkBoxes.add(indexingStemmingCBox);
         checkBoxes.add(indexingLemetizationCBox);
         checkBoxes.add(indexingStopWordsCBox);
+
+        try {
+            algo.performTermMatrix();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
 
     }
 
