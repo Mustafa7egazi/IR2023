@@ -5,20 +5,19 @@ import java.util.*;
 
 public class TermDocumentMatrix {
 
-    private File file = new File("cici.txt");
-    private FileReader reader;
-    private BufferedReader bufferedReader;
-    private List<String> terms, documents;
-    private Dictionary<String, String[]> wholeWords;
-    private List<String[]> globalWords;
+    private final BufferedReader bufferedReader;
+    private final List<String> terms, documents;
+    private final Dictionary<String, String[]> wholeWords;
+    private final List<String[]> globalWords;
 
     int[][] matrix;
 
     public TermDocumentMatrix() throws FileNotFoundException {
-        reader = new FileReader(file);
+        File file = new File("cici.txt");
+        FileReader reader = new FileReader(file);
         bufferedReader = new BufferedReader(reader);
-        terms = new ArrayList<String>();
-        documents = new ArrayList<String>();
+        terms = new ArrayList<>();
+        documents = new ArrayList<>();
         wholeWords = new Hashtable<>();
         globalWords = new ArrayList<>();
     }
@@ -165,8 +164,8 @@ public class TermDocumentMatrix {
     }
 
 
-    public void booleanSearch(String textToSearch) {
-        List<String> localTerms = new ArrayList<>();
+    public List<String> booleanSearch(String textToSearch) {
+        List<String> localTerms;
         localTerms = List.of(textToSearch.toLowerCase().split("\\s+"));
 //        List<String> firstWordDocuments = oneWordSearch(localTerms.get(0));
 //        List<String> secondWordDocuments = oneWordSearch(localTerms.get(2));
@@ -174,21 +173,21 @@ public class TermDocumentMatrix {
             case "and" -> {
                 List<String> resultOfAnd = andSearch(textToSearch);
                 if (resultOfAnd.isEmpty()){
-                    System.out.println("Not Found with and query");
+                    return List.of("Not Found with and query");
                 }else {
-                    System.out.println(resultOfAnd);
+                    return resultOfAnd;
                 }
             }
             case "or" -> {
                 List<String> resultOfOr = orSearch(textToSearch);
                 if (resultOfOr.isEmpty()){
-                    System.out.println("Not Found with or query");
+                    return List.of("Not Found with or query");
                 }else{
-                    System.out.println(resultOfOr);
+                    return resultOfOr;
                 }
             }
             default -> {
-                System.out.println("Wrong query!!");
+                return List.of("Wrong query!!");
             }
         }
     }

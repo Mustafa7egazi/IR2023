@@ -1,13 +1,15 @@
 package com.example.ir2023;
 
 import com.example.algorithms.TermDocumentMatrix;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.Stage;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -17,6 +19,8 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 public class HomeController implements Initializable {
+
+    public static List<String> resultToShow;
 
     TermDocumentMatrix algo;
 
@@ -46,12 +50,12 @@ public class HomeController implements Initializable {
 
 
     @FXML
-    private CheckBox indexingLemetizationCBox,indexingNormalizationCBox,
-            indexingStemmingCBox,indexingStopWordsCBox,indexingTokenizationCBox;
+    private CheckBox indexingLemetizationCBox, indexingNormalizationCBox,
+            indexingStemmingCBox, indexingStopWordsCBox, indexingTokenizationCBox;
 
     @FXML
-    private CheckBox searchingLemetizationCBox,searchingNormalizationCBox,
-            searchingStemmingCBox,searchingStopWordsCBox,searchingTokenizationCBox;
+    private CheckBox searchingLemetizationCBox, searchingNormalizationCBox,
+            searchingStemmingCBox, searchingStopWordsCBox, searchingTokenizationCBox;
 
     @FXML
     void onExitBtnClick() {
@@ -69,28 +73,30 @@ public class HomeController implements Initializable {
     }
 
     @FXML
-    void onSearchBtnClick() throws FileNotFoundException {
+    void onSearchBtnClick() throws IOException {
 
         String searchText = searchField.getText().toLowerCase();
-        String [] split = searchText.split(" ");
-        if (split.length == 3){
-            algo.booleanSearch(searchText);
-        }else if (split.length == 1){
-            if (algo.oneWordSearch(searchText).isEmpty()){
-                System.out.println("Not Found!");
-            }else {
-                System.out.println(algo.oneWordSearch(searchText));
+        String[] split = searchText.split(" ");
+        if (split.length == 3) {
+            showTermMatrixSearchResult(algo.booleanSearch(searchText));
+
+        } else if (split.length == 1) {
+            if (algo.oneWordSearch(searchText).isEmpty()) {
+                showTermMatrixSearchResult(List.of("Not Found!"));
+
+            } else {
+                showTermMatrixSearchResult(algo.oneWordSearch(searchText));
             }
-        }else {
-            System.out.println("Unsupported query !!");
+        } else {
+            showTermMatrixSearchResult(List.of("Unsupported query !!"));
         }
     }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         String[] choices = {"Lucene", "Term-incidence",
-                            "Inverted-index","Positional-index",
-                            "Bi-word-index"};
+                "Inverted-index", "Positional-index",
+                "Bi-word-index"};
         indexingIdexChoiceBox.getItems().addAll(choices);
         indexingIdexChoiceBox.setValue(choices[0]);
         searchingIdexChoiceBox.getItems().addAll(choices);
@@ -118,12 +124,24 @@ public class HomeController implements Initializable {
         }
     }
 
-    private void manipulateCheckboxes(CheckBox c){
-        if (c.isSelected()){
+    private void manipulateCheckboxes(CheckBox c) {
+        if (c.isSelected()) {
             if (!preprocessing.contains(c.getText()))
-               preprocessing.add(c.getText());
-        }else {
+                preprocessing.add(c.getText());
+        } else {
             preprocessing.remove(c.getText());
         }
+    }
+
+    private void showTermMatrixSearchResult(List<String> searchResult) throws IOException {
+        resultToShow = searchResult;
+        Stage resultStage = new Stage();
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("result-of-documents-list.fxml"));
+        Scene scene = new Scene(fxmlLoader.load(), 600, 490);
+        resultStage.setTitle("Search Result!");
+        resultStage.setScene(scene);
+        resultStage.setResizable(false);
+        resultStage.setAlwaysOnTop(true);
+        resultStage.show();
     }
 }
