@@ -10,6 +10,8 @@ public class TermDocumentMatrix {
     private final Dictionary<String, String[]> wholeWords;
     private final List<String[]> globalWords;
 
+    public static Boolean doneTermIndex = false;
+
     int[][] matrix;
 
     public TermDocumentMatrix() throws FileNotFoundException {
@@ -85,6 +87,7 @@ public class TermDocumentMatrix {
 //            }
 //        }
         bufferedReader.close();
+        doneTermIndex = true;
 //        System.out.println(c);
     }
 

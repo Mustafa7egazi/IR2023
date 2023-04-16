@@ -25,7 +25,6 @@ public class IR2023Controller {
         homeStage.setTitle("!Google");
         homeStage.setScene(scene);
         homeStage.setResizable(false);
-        homeStage.setAlwaysOnTop(true);
         homeStage.show();
     }
 }

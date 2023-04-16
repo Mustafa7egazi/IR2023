@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 
@@ -32,6 +33,20 @@ public class ResultOfDocumentsList implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        if (!HomeController.resultToShow.contains("Not Found with and query") ||
+                !HomeController.resultToShow.contains("Not Found with or query") ||
+                !HomeController.resultToShow.contains("Wrong query!!") )
         listViewOfResults.getItems().addAll(HomeController.resultToShow);
+        else {
+            showAlert(HomeController.resultToShow.get(0));
+        }
+    }
+
+    @FXML
+    void showAlert(String m){
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Note!");
+        alert.setContentText(m);
+        alert.showAndWait();
     }
 }

@@ -1,21 +1,24 @@
 package com.example.ir2023;
 
 import com.example.algorithms.TermDocumentMatrix;
+import javafx.animation.PauseTransition;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
 public class HomeController implements Initializable {
@@ -35,6 +38,8 @@ public class HomeController implements Initializable {
     private final ArrayList<String> preprocessing = new ArrayList<>();
     private final ArrayList<CheckBox> checkBoxes = new ArrayList<>();
 
+    private String selectedIndexingAlgorithm = "";
+
 
     @FXML
     private AnchorPane homePage;
@@ -43,6 +48,12 @@ public class HomeController implements Initializable {
     private ChoiceBox<String> indexingIdexChoiceBox;
     @FXML
     private ChoiceBox<String> searchingIdexChoiceBox;
+
+    @FXML
+    private ImageView loadingIndicator;
+
+    @FXML
+    private Label doneLabel;
 
 
     @FXML
@@ -63,38 +74,63 @@ public class HomeController implements Initializable {
     }
 
     @FXML
-    void onFinishBtnClick() throws IOException {
+    void onFinishBtnClick() {
 
-        TermDocumentMatrix algo = new TermDocumentMatrix();
-        algo.performTermMatrix();
+        if (indexingIdexChoiceBox.getValue().equals("Select") || indexingIdexChoiceBox.getValue().equals(""))
+            System.out.println("Select algorithm first");
+        else if (Objects.equals(selectedIndexingAlgorithm, "Term-incidence")) {
+            loadingIndicator.setVisible(true);
+                PauseTransition pt = new PauseTransition();
+                pt.setDuration(Duration.seconds(1));
+                pt.setOnFinished(e->{
+                    try {
+                        algo.performTermMatrix();
+                    } catch (IOException ex) {
+                        System.out.println(ex.getMessage());
+                    } finally {
+                        System.out.println("Finish indexing");
+                        loadingIndicator.setVisible(false);
+                        doneLabel.setVisible(true);
+                    }
+                });
+                pt.play();
 
-//        System.out.println("index: "+indexingIdexChoiceBox.getValue()+
-//                "\t preprocessing: "+preprocessing);
+
+        } else {
+            showAlert("Not implemented yet");
+            System.out.println("Not implemented yet");
+        }
+
     }
 
     @FXML
     void onSearchBtnClick() throws IOException {
+        if (searchingIdexChoiceBox.getValue().equals("Term-incidence")){
+            String searchText = searchField.getText().toLowerCase();
+            String[] split = searchText.split(" ");
+            if (split.length == 3) {
+                showTermMatrixSearchResult(algo.booleanSearch(searchText));
 
-        String searchText = searchField.getText().toLowerCase();
-        String[] split = searchText.split(" ");
-        if (split.length == 3) {
-            showTermMatrixSearchResult(algo.booleanSearch(searchText));
+            } else if (split.length == 1) {
+                if (algo.oneWordSearch(searchText).isEmpty()) {
+                    showAlert("Not Found!");
 
-        } else if (split.length == 1) {
-            if (algo.oneWordSearch(searchText).isEmpty()) {
-                showTermMatrixSearchResult(List.of("Not Found!"));
-
+                } else {
+                    showTermMatrixSearchResult(algo.oneWordSearch(searchText));
+                }
             } else {
-                showTermMatrixSearchResult(algo.oneWordSearch(searchText));
+                showAlert("Unsupported query !!");
             }
-        } else {
-            showTermMatrixSearchResult(List.of("Unsupported query !!"));
+        }else if (searchingIdexChoiceBox.getValue().equals("Select")){
+            showAlert("Please select and algorithm to search with!");
+        }else {
+            showAlert("Not implemented yet!");
         }
     }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        String[] choices = {"Lucene", "Term-incidence",
+        String[] choices = {"Select", "Lucene", "Term-incidence",
                 "Inverted-index", "Positional-index",
                 "Bi-word-index"};
         indexingIdexChoiceBox.getItems().addAll(choices);
@@ -108,11 +144,9 @@ public class HomeController implements Initializable {
         checkBoxes.add(indexingLemetizationCBox);
         checkBoxes.add(indexingStopWordsCBox);
 
-        try {
-            algo.performTermMatrix();
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
+        loadingIndicator.setVisible(false);
+
+        indexingIdexChoiceBox.setOnAction(this::getIndexTypeSelection);
 
     }
 
@@ -133,6 +167,26 @@ public class HomeController implements Initializable {
         }
     }
 
+    private void getIndexTypeSelection(ActionEvent event) {
+        selectedIndexingAlgorithm = indexingIdexChoiceBox.getValue();
+//        loadingIndicator.setVisible(true);
+//        if (Objects.equals(indexingIdexChoiceBox.getValue(), "Term-incidence")){
+//            try {
+//                algo.performTermMatrix();
+//            } catch (IOException e) {
+//                System.out.println(e.getMessage());
+//            }
+//        }
+//        try {
+//            Thread.sleep(Duration.ofSeconds(1));
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+//        if (TermDocumentMatrix.doneTermIndex){
+//            loadingIndicator.setVisible(false);
+//        }
+    }
+
     private void showTermMatrixSearchResult(List<String> searchResult) throws IOException {
         resultToShow = searchResult;
         Stage resultStage = new Stage();
@@ -144,4 +198,13 @@ public class HomeController implements Initializable {
         resultStage.setAlwaysOnTop(true);
         resultStage.show();
     }
+    @FXML
+    void showAlert(String m){
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Note!");
+        alert.setContentText(m);
+        alert.showAndWait();
+    }
+
+
 }

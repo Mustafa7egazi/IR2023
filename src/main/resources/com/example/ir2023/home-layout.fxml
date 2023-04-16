@@ -103,6 +103,16 @@
                               <Cursor fx:constant="HAND" />
                            </cursor>
                         </Button>
+                        <ImageView fx:id="loadingIndicator" blendMode="DARKEN" fitHeight="113.0" fitWidth="166.0" layoutX="139.0" layoutY="209.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../../../../../../../../../../../../../home/mustafa7egazi/Downloads/loading.gif" />
+                           </image>
+                        </ImageView>
+                        <Label fx:id="doneLabel" layoutX="139.0" layoutY="251.0" prefHeight="29.0" prefWidth="169.0" text="Indexing Done!" textFill="WHITE" visible="false">
+                           <font>
+                              <Font name="Ubuntu Bold" size="20.0" />
+                           </font>
+                        </Label>
                      </children>
                   </AnchorPane>
             </content>
