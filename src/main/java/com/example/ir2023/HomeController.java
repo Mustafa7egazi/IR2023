@@ -1,5 +1,7 @@
 package com.example.ir2023;
 
+import com.example.algorithms.InvertedIndex;
+import com.example.algorithms.Lucene;
 import com.example.algorithms.TermDocumentMatrix;
 import javafx.animation.PauseTransition;
 import javafx.event.ActionEvent;
@@ -12,6 +14,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import org.apache.lucene.queryparser.classic.ParseException;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -25,15 +28,10 @@ public class HomeController implements Initializable {
 
     public static List<String> resultToShow;
 
-    TermDocumentMatrix algo;
+    TermDocumentMatrix termMatrixAlgo;
+    InvertedIndex invertedIndexAlgo;
+    Lucene luceneAlgo;
 
-    {
-        try {
-            algo = new TermDocumentMatrix();
-        } catch (FileNotFoundException e) {
-            System.out.println(e.getMessage());
-        }
-    }
 
     private final ArrayList<String> preprocessing = new ArrayList<>();
     private final ArrayList<CheckBox> checkBoxes = new ArrayList<>();
@@ -76,15 +74,24 @@ public class HomeController implements Initializable {
     @FXML
     void onFinishBtnClick() {
 
-        if (indexingIdexChoiceBox.getValue().equals("Select") || indexingIdexChoiceBox.getValue().equals(""))
-            System.out.println("Select algorithm first");
-        else if (Objects.equals(selectedIndexingAlgorithm, "Term-incidence")) {
-            loadingIndicator.setVisible(true);
+        if (!indexingTokenizationCBox.isSelected()){
+            showAlert("For better result, you should select Tokenization for processing.");
+        }else {
+
+            if (indexingIdexChoiceBox.getValue().equals("Select") || indexingIdexChoiceBox.getValue().equals(""))
+                System.out.println("Select algorithm first");
+            else if (Objects.equals(selectedIndexingAlgorithm, "Term-incidence")) {
+                try {
+                    termMatrixAlgo = new TermDocumentMatrix();
+                } catch (FileNotFoundException e) {
+                    System.out.println(e.getMessage());
+                }
+                loadingIndicator.setVisible(true);
                 PauseTransition pt = new PauseTransition();
                 pt.setDuration(Duration.seconds(1));
                 pt.setOnFinished(e->{
                     try {
-                        algo.performTermMatrix();
+                        termMatrixAlgo.performTermMatrix();
                     } catch (IOException ex) {
                         System.out.println(ex.getMessage());
                     } finally {
@@ -96,40 +103,109 @@ public class HomeController implements Initializable {
                 pt.play();
 
 
-        } else {
-            showAlert("Not implemented yet");
-            System.out.println("Not implemented yet");
-        }
+            }else if (selectedIndexingAlgorithm.equals("Inverted-index")){
+                try {
+                    invertedIndexAlgo = new InvertedIndex();
+                } catch (FileNotFoundException e) {
+                    System.out.println(e.getMessage());
+                }
+                loadingIndicator.setVisible(true);
+                PauseTransition pt = new PauseTransition();
+                pt.setDuration(Duration.seconds(1));
+                pt.setOnFinished(e->{
+                    try {
+                        invertedIndexAlgo.performInvertedIndex();
+                    } catch (IOException ex) {
+                        System.out.println(ex.getMessage());
+                    } finally {
+                        System.out.println("Finish indexing");
+                        loadingIndicator.setVisible(false);
+                        doneLabel.setVisible(true);
+                    }
+                });
+                pt.play();
+            } else if (selectedIndexingAlgorithm.equals("Lucene")) {
+                try {
+                    luceneAlgo = new Lucene();
+                    luceneAlgo.luceneIndexer();
+                } catch (IOException e) {
+                    System.out.println(e.getMessage());
+                }
 
+            } else {
+                showAlert("Not implemented yet");
+                System.out.println("Not implemented yet");
+            }
+
+        }
     }
 
     @FXML
     void onSearchBtnClick() throws IOException {
-        if (searchingIdexChoiceBox.getValue().equals("Term-incidence")){
-            String searchText = searchField.getText().toLowerCase();
-            String[] split = searchText.split(" ");
-            if (split.length == 3) {
-                showTermMatrixSearchResult(algo.booleanSearch(searchText));
+        doneLabel.setVisible(false);
+        if (!searchingTokenizationCBox.isSelected()){
+            showAlert("For better result, you should select Tokenization for searching.");
 
-            } else if (split.length == 1) {
-                if (algo.oneWordSearch(searchText).isEmpty()) {
-                    showAlert("Not Found!");
-
-                } else {
-                    showTermMatrixSearchResult(algo.oneWordSearch(searchText));
-                }
-            } else {
-                showAlert("Unsupported query !!");
-            }
-        }else if (searchingIdexChoiceBox.getValue().equals("Select")){
-            showAlert("Please select and algorithm to search with!");
         }else {
-            showAlert("Not implemented yet!");
+            String searchText = searchField.getText();
+            if (searchingIdexChoiceBox.getValue().equals("Term-incidence")){
+                String[] split = searchText.toLowerCase().split(" ");
+                if (split.length == 3 || split.length == 4 || split.length == 5) {
+                    showSearchResultDocs(termMatrixAlgo.booleanSearch(searchText));
+
+                }else if (split.length == 2){
+                    if (split[0].equals("not"))
+                    {
+                        showSearchResultDocs(termMatrixAlgo.notSearch(searchText));
+                    }else {
+                        showAlert("Wrong boolean query formulation!");
+                    }
+                }
+                else if (split.length == 1) {
+                    if (termMatrixAlgo.oneWordSearch(searchText).isEmpty()) {
+                        showAlert("Not Found!");
+
+                    } else {
+                        showSearchResultDocs(termMatrixAlgo.oneWordSearch(searchText));
+                    }
+                } else {
+                    showAlert("Unsupported query !!");
+                }
+            }else if (searchingIdexChoiceBox.getValue().equals("Select")){
+                showAlert("Please select and algorithm to search with!");
+            } else if (searchingIdexChoiceBox.getValue().equals("Inverted-index")) {
+                String[] split = searchText.toLowerCase().split(" ");
+                if (split.length == 3 || split.length == 4 || split.length == 5){
+                    showSearchResultDocs(invertedIndexAlgo.booleanSearch(searchText));
+                } else if (split.length == 2) {
+                    if (split[0].equals("not")){
+                        showSearchResultDocs(invertedIndexAlgo.notSearch(searchText));
+                    }else {
+                        showAlert("Wrong query formulation!!");
+                    }
+                } else if (split.length == 1) {
+                    showSearchResultDocs(invertedIndexAlgo.oneWordSearch(searchText));
+                }else {
+                    showAlert("Un supported query!!");
+                }
+            } else if (searchingIdexChoiceBox.getValue().equals("Lucene")) {
+                try {
+                    showSearchResultDocs(luceneAlgo.luceneSearcher(searchText));
+                } catch (ParseException e) {
+                    System.out.println(e.getMessage());
+                }
+
+            } else {
+                showAlert("Not implemented yet!");
+            }
+
         }
+
     }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+
         String[] choices = {"Select", "Lucene", "Term-incidence",
                 "Inverted-index", "Positional-index",
                 "Bi-word-index"};
@@ -169,25 +245,9 @@ public class HomeController implements Initializable {
 
     private void getIndexTypeSelection(ActionEvent event) {
         selectedIndexingAlgorithm = indexingIdexChoiceBox.getValue();
-//        loadingIndicator.setVisible(true);
-//        if (Objects.equals(indexingIdexChoiceBox.getValue(), "Term-incidence")){
-//            try {
-//                algo.performTermMatrix();
-//            } catch (IOException e) {
-//                System.out.println(e.getMessage());
-//            }
-//        }
-//        try {
-//            Thread.sleep(Duration.ofSeconds(1));
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-//        if (TermDocumentMatrix.doneTermIndex){
-//            loadingIndicator.setVisible(false);
-//        }
     }
 
-    private void showTermMatrixSearchResult(List<String> searchResult) throws IOException {
+    private void showSearchResultDocs(List<String> searchResult) throws IOException {
         resultToShow = searchResult;
         Stage resultStage = new Stage();
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("result-of-documents-list.fxml"));

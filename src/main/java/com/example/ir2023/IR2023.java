@@ -1,5 +1,6 @@
 package com.example.ir2023;
 
+import com.example.algorithms.InvertedIndex;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;

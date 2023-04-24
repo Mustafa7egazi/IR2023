@@ -166,32 +166,113 @@ public class TermDocumentMatrix {
         return foundDocuments;
     }
 
+    public List<String> notSearch(String textToSearch) {
+        List<String> splitText = List.of(textToSearch.toLowerCase().split("\\s+"));
+        List<String> foundDocuments = new ArrayList<>();
+        int indexOfNot = splitText.indexOf("not");
+        int index;
+        int indexOfNextWord = ++indexOfNot;
+
+        if (terms.contains(splitText.get(indexOfNextWord))) {
+            index = terms.indexOf(splitText.get(indexOfNextWord));
+        } else {
+            return documents;
+        }
+
+        if (index != -1) {
+            for (int i = 0; i < documents.size(); i++) {
+                if (matrix[index][i] == 0) {
+                    foundDocuments.add(documents.get(i));
+                }
+            }
+        }
+        return foundDocuments;
+    }
+
 
     public List<String> booleanSearch(String textToSearch) {
         List<String> localTerms;
         localTerms = List.of(textToSearch.toLowerCase().split("\\s+"));
-//        List<String> firstWordDocuments = oneWordSearch(localTerms.get(0));
-//        List<String> secondWordDocuments = oneWordSearch(localTerms.get(2));
-        switch (localTerms.get(1)) {
-            case "and" -> {
-                List<String> resultOfAnd = andSearch(textToSearch);
-                if (resultOfAnd.isEmpty()){
-                    return List.of("Not Found with and query");
+        if (localTerms.size() == 3) {
+            switch (localTerms.get(1)) {
+                case "and" -> {
+                    List<String> resultOfAnd = andSearch(textToSearch);
+                    if (resultOfAnd.isEmpty()) {
+                        return List.of("Not Found with and query");
+                    } else {
+                        return resultOfAnd;
+                    }
+                }
+                case "or" -> {
+                    List<String> resultOfOr = orSearch(textToSearch);
+                    if (resultOfOr.isEmpty()) {
+                        return List.of("Not Found with or query");
+                    } else {
+                        return resultOfOr;
+                    }
+                }
+                default -> {
+                    return List.of("Wrong query!!");
+                }
+            }
+        } else if (localTerms.size() == 2 && (localTerms.indexOf("not")) == 0) {
+            return notSearch(textToSearch);
+        } else if (localTerms.size() == 4) {
+
+            if (localTerms.indexOf("not") == 0 ) {
+                List<String> firstResult = notSearch(localTerms.get(0) + " " + localTerms.get(1));
+                List<String> secondResult = oneWordSearch(localTerms.get(3));
+                Set<String> finalResult = new HashSet<>(firstResult);
+                if (localTerms.indexOf("and") == 2 ){
+                    finalResult.retainAll(secondResult);
+                } else if (localTerms.indexOf("or") == 2) {
+                     finalResult.addAll(secondResult);
+                } else {
+                     return List.of("Wrong query!!");
+                }
+                if (finalResult.isEmpty()){
+                    return List.of("Not found!!");
                 }else {
-                    return resultOfAnd;
+
+                    return new ArrayList<>(finalResult);
+                }
+            } else if (localTerms.indexOf("not") == 2) {
+                List<String> firstResult = notSearch(localTerms.get(2) + " " + localTerms.get(3));
+                List<String> secondResult = oneWordSearch(localTerms.get(0));
+                List<String> finalResult = new ArrayList<>(firstResult);
+                if (localTerms.indexOf("and") == 1 ){
+                    finalResult.retainAll(secondResult);
+                } else if (localTerms.indexOf("or") == 1) {
+                    finalResult.addAll(secondResult);
+                } else {
+                    return List.of("Wrong query!!");
+                }
+                if (finalResult.isEmpty()){
+                    return List.of("Not found!!");
+                }else {
+                    return new ArrayList<>(finalResult);
                 }
             }
-            case "or" -> {
-                List<String> resultOfOr = orSearch(textToSearch);
-                if (resultOfOr.isEmpty()){
-                    return List.of("Not Found with or query");
-                }else{
-                    return resultOfOr;
+        } else if (localTerms.size() == 5) {
+
+            if (localTerms.indexOf("not") == 0 && localTerms.lastIndexOf("not") == 3) {
+                List<String> firstResult = notSearch(localTerms.get(0) + " " + localTerms.get(1));
+                List<String> secondResult = notSearch(localTerms.get(3) + " " + localTerms.get(4));
+                List<String> finalResult = new ArrayList<>(firstResult);
+                if (localTerms.indexOf("and") == 2 ){
+                    finalResult.retainAll(secondResult);
+                } else if (localTerms.indexOf("or") == 2) {
+                    finalResult.addAll(secondResult);
+                } else {
+                    return List.of("Wrong query!!");
                 }
-            }
-            default -> {
-                return List.of("Wrong query!!");
+                if (finalResult.isEmpty()){
+                    return List.of("Not found!!");
+                }else {
+                    return new ArrayList<>(finalResult);
+                }
             }
         }
+        return List.of("Unsupported query !!");
     }
 }

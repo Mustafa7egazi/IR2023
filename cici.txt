@@ -32312,7 +32312,7 @@ printing in Europe less than 500 years prior to our period
 of principal coverage, 1876-1976.  This latter period coincides
 with the second century of the United States of America,
 during which were intensified earlier efforts to carry out one of
-Washington's urgings in his Farewell Address:  "Promote
+Washington's urgings in his Farewell Address:  " Promote
 then, as an object of primary importance, institutions for the general diffusion
 of knowledge."
 .X
@@ -92796,7 +92796,7 @@ generating, is an obvious candidate for such treatment.  And
 having noticed the intellectual connections between the ideas
 of various scholars, we must surely pass on to an investigation 
 of the social relations through which those connections are
-established.  How do scientists teach, communicate with, promote,
+established.  How do scientists teach, communicate with, promote ,
 criticize, honour, give ear to, give patronage to, one another?
 What is the nature of the community to which they adhere? 
 .X
