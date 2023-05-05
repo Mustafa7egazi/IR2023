@@ -5,16 +5,17 @@ import com.example.ir2023.HomeController;
 import java.io.*;
 import java.util.*;
 
-import static com.example.util.Utilities.*;
+import static com.example.util.Utilities.applyStemming;
+import static com.example.util.Utilities.applyStopWordsRemoval;
 
-public class InvertedIndex {
-    private final Map<String, List<String>> indexMap;
+public class PositionalIndex {
+    private final Map<String, Map<String, List<Integer>>> indexMap; // Map each term to a map of documents and their positions
     private final BufferedReader bufferedReader;
     private final List<String> terms, documents;
     private final Dictionary<String, List<String>> wholeWords;
     private final List<List<String>> globalWords;
 
-    public InvertedIndex() throws FileNotFoundException {
+    public PositionalIndex() throws FileNotFoundException {
         indexMap = new HashMap<>();
 
         File file = new File("cici.txt");
@@ -26,7 +27,7 @@ public class InvertedIndex {
         globalWords = new ArrayList<>();
     }
 
-    public void performInvertedIndex() throws IOException {
+    public void performPositionalIndex() throws IOException {
         // Parse the text in the file to extract the individual documents and their terms
         String line;
         while ((line = bufferedReader.readLine()) != null) {
@@ -38,13 +39,9 @@ public class InvertedIndex {
                     builder.append(line).append(" ");
                 }
                 String document = builder.toString().toLowerCase().trim();
-                List<String> words = List.of(document.split("\\s+"));
+                List<String> words = Arrays.asList(document.split("\\s+"));
 
-
-//                if (HomeController.preprocessing.contains("Lemetization")) {
-//                    words = applyLemmetization(words);
-//                }
-
+                // TODO: preprocessing activation
                 if (HomeController.preprocessing.contains("Stemming")) {
                     words = applyStemming(words);
                 }
@@ -52,10 +49,8 @@ public class InvertedIndex {
                     words = applyStopWordsRemoval(words);
                 }
 
-
                 wholeWords.put("words", words);
                 globalWords.add(words);
-                //System.out.println(Arrays.toString(wholeWords.get("words")));
 
                 for (String word : words) {
                     if (!terms.contains(word)) {
@@ -65,31 +60,40 @@ public class InvertedIndex {
             }
         }
 
-
+        // Initialize the index map
         for (String term : terms) {
-            indexMap.put(term.toLowerCase(), new ArrayList<>());
+            indexMap.put(term.toLowerCase(), new HashMap<>());
         }
 
+        // Populate the index map with document positions for each term
         for (int i = 0; i < documents.size(); i++) {
+            String doc = documents.get(i);
             List<String> words = globalWords.get(i);
-            for (String word : words) {
+            for (int j = 0; j < words.size(); j++) {
+                String word = words.get(j);
                 int index = terms.indexOf(word);
                 if (index != -1) {
-                    if (!indexMap.get(terms.get(index)).contains(documents.get(i))) {
-                        indexMap.get(terms.get(index)).add(documents.get(i));
+                    Map<String, List<Integer>> docPositions = indexMap.get(terms.get(index));
+                    if (!docPositions.containsKey(doc)) {
+                        docPositions.put(doc, new ArrayList<>());
                     }
+                    docPositions.get(doc).add(j + 1); // Add the position of the word in the document
                 }
             }
         }
 
-        System.out.println(indexMap.get("biographi"));
-
-//        System.out.println(indexMap);
-//        System.out.println("finish");
+        // Print the index map
+//        for (String term : indexMap.keySet()) {
+//            System.out.println(term + ": " + indexMap.get(term));
+//        }
     }
 
+
     public List<String> oneWordSearch(String textToSearch) {
-        List<String> foundDocs = indexMap.get(textToSearch);
+        Map<String, List<Integer>> docsAndOccurrence = indexMap.get(textToSearch);
+
+        List<String> foundDocs = new ArrayList<>(docsAndOccurrence.keySet());
+
         try {
             if (foundDocs.isEmpty()) {
                 return List.of("Not found!!");
@@ -100,10 +104,19 @@ public class InvertedIndex {
         return foundDocs;
     }
 
+
     public List<String> andSearch(String textToSearch) {
         String[] splitText = textToSearch.split("\\s+");
-        List<String> firstWordDocs = indexMap.get(splitText[0].toLowerCase());
-        List<String> secondWordDocs = indexMap.get(splitText[2].toLowerCase());
+        String firstWord = splitText[0].toLowerCase();
+        String secondWord = splitText[2].toLowerCase();
+
+        Map<String, List<Integer>> docsAndOccurrenceOfFirstWord = indexMap.get(firstWord);
+        Map<String, List<Integer>> docsAndOccurrenceOfSecondWord = indexMap.get(secondWord);
+
+        List<String> firstWordDocs = new ArrayList<>(docsAndOccurrenceOfFirstWord.keySet());
+        List<String> secondWordDocs = new ArrayList<>(docsAndOccurrenceOfSecondWord.keySet());
+
+
         try {
             if (firstWordDocs.isEmpty() || secondWordDocs.isEmpty())
                 return List.of("Not found with AND");
@@ -112,30 +125,34 @@ public class InvertedIndex {
         }
         List<String> intersection = new ArrayList<>(firstWordDocs);
         intersection.retainAll(secondWordDocs);
-        System.out.println(intersection);
         if (intersection.isEmpty()) {
             return List.of("Not found with AND");
         }
         return intersection;
     }
 
+
     public List<String> orSearch(String textToSearch) {
         String[] splitText = textToSearch.split("\\s+");
-        List<String> firstWordDocs = indexMap.get(splitText[0].toLowerCase());
-        List<String> secondWordDocs = indexMap.get(splitText[2].toLowerCase());
+        String firstWord = splitText[0].toLowerCase();
+        String secondWord = splitText[2].toLowerCase();
+
+        Map<String, List<Integer>> docsAndOccurrenceOfFirstWord = indexMap.get(firstWord);
+        Map<String, List<Integer>> docsAndOccurrenceOfSecondWord = indexMap.get(secondWord);
+
+        List<String> firstWordDocs = new ArrayList<>(docsAndOccurrenceOfFirstWord.keySet());
+        List<String> secondWordDocs = new ArrayList<>(docsAndOccurrenceOfSecondWord.keySet());
 
 
-        if (firstWordDocs == null && secondWordDocs != null) {
+        if (firstWordDocs.isEmpty() && (!secondWordDocs.isEmpty())) {
             return secondWordDocs;
-        } else if (firstWordDocs != null && secondWordDocs == null) {
+        } else if ((!firstWordDocs.isEmpty()) && secondWordDocs.isEmpty()) {
             return firstWordDocs;
-        } else if (firstWordDocs != null && secondWordDocs != null) {
+        } else if ((!firstWordDocs.isEmpty()) && (!secondWordDocs.isEmpty())) {
             Set<String> allData = new HashSet<>();
             allData.addAll(firstWordDocs);
             allData.addAll(secondWordDocs);
-            List<String> castedAllData = new ArrayList<>();
-            castedAllData.addAll(allData);
-            return castedAllData;
+            return new ArrayList<>(allData);
         } else {
             return List.of("Not found with OR");
         }
@@ -143,19 +160,27 @@ public class InvertedIndex {
 
     public List<String> notSearch(String textToSearch) {
         String[] splitText = textToSearch.split("\\s+");
+        String firstWord = splitText[0];
+        String secondWord = splitText[1].toLowerCase();
+
+        Map<String, List<Integer>> docsAndOccurrenceOfTheWord = indexMap.get(secondWord);
+
+
+        List<String> theWordDocs = new ArrayList<>(docsAndOccurrenceOfTheWord.keySet());
+
+
         if (splitText.length == 2 && splitText[0].equals("NOT")) {
-            List<String> wordFoundDocs = indexMap.get(splitText[1].toLowerCase());
-            if (wordFoundDocs == null) {
-                wordFoundDocs = new ArrayList<>();
-            }
-            List<String> resultDocs = new ArrayList<>();
-            for (String doc : documents) {
-                if (!wordFoundDocs.contains(doc)) {
-                    resultDocs.add(doc);
+
+            if (!(theWordDocs.isEmpty())) {
+                List<String> resultDocs = new ArrayList<>();
+                for (String doc : documents) {
+                    if (!theWordDocs.contains(doc)) {
+                        resultDocs.add(doc);
+                    }
                 }
-            }
-            if (!resultDocs.isEmpty()) {
-                return resultDocs;
+                if (!resultDocs.isEmpty()) {
+                    return resultDocs;
+                }
             }
         }
         return List.of("Not Found !!");
@@ -233,4 +258,57 @@ public class InvertedIndex {
         }
         return List.of("Unsupported query !!");
     }
+
+
+    public static void main(String[] args) {
+        try {
+            PositionalIndex pI = new PositionalIndex();
+            pI.performPositionalIndex();
+            System.out.println( pI.booleanSearch("biographies AND NOT Dewey"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+//    public List<String> search(String query) {
+//        String[] terms = query.toLowerCase().split("\\s+");
+//        List<String> results = new ArrayList<>();
+//
+//        // Find the documents that contain the first term in the query
+//        List<String> initialDocs = indexMap.get(terms[0]);
+//
+//        // Loop through each of those documents and check if they contain the remaining terms
+//        for (String doc : initialDocs) {
+//            List<Integer> positions = new ArrayList<>();
+//            List<String> words = wholeWords.get(doc);
+//            for (int i = 0; i < words.size(); i++) {
+//                if (words.get(i).equals(terms[0])) {
+//                    positions.add(i);
+//                }
+//            }
+//            boolean found = true;
+//            for (int i = 1; i < terms.length; i++) {
+//                List<Integer> newPositions = new ArrayList<>();
+//                for (int j = 0; j < positions.size(); j++) {
+//                    int pos = positions.get(j) + i;
+//                    if (pos >= words.size() || !words.get(pos).equals(terms[i])) {
+//                        found = false;
+//                        break;
+//                    } else {
+//                        newPositions.add(pos);
+//                    }
+//                }
+//                if (!found) {
+//                    break;
+//                }
+//                positions = newPositions;
+//            }
+//            if (found) {
+//                results.add(doc);
+//            }
+//        }
+//        return results;
+//    }
+
+
 }

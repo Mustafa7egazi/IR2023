@@ -1,14 +1,20 @@
 package com.example.algorithms;
 
+import com.example.ir2023.HomeController;
+
+
 import java.io.*;
 import java.util.*;
+
+import static com.example.util.Utilities.*;
 
 public class TermDocumentMatrix {
 
     private final BufferedReader bufferedReader;
-    private final List<String> terms, documents;
-    private final Dictionary<String, String[]> wholeWords;
-    private final List<String[]> globalWords;
+    private List<String> terms;
+    private final List<String> documents;
+    private final Dictionary<String, List<String>> wholeWords;
+    private final List<List<String>> globalWords;
 
     public static Boolean doneTermIndex = false;
 
@@ -36,7 +42,22 @@ public class TermDocumentMatrix {
                     builder.append(line).append(" ");
                 }
                 String document = builder.toString().toLowerCase().trim();
-                String[] words = document.split("\\s+");
+                List<String> words = List.of(document.split("\\s+"));
+
+
+//                if (HomeController.preprocessing.contains("Lemetization")) {
+//                    terms = applyLemmetization(terms);
+//                }
+
+                if (HomeController.preprocessing.contains("Stemming")) {
+                    words = applyStemming(words);
+                }
+                if (HomeController.preprocessing.contains("Stop words")) {
+                    words = applyStopWordsRemoval(words);
+                }
+
+
+
                 wholeWords.put("words", words);
                 globalWords.add(words);
                 //System.out.println(Arrays.toString(wholeWords.get("words")));
@@ -52,44 +73,47 @@ public class TermDocumentMatrix {
             }
         }
 
+
+        System.out.println(terms.subList(0, 20));
+
+
+        System.out.println("------------------------ After ---------------------");
+        System.out.println(terms.subList(0, 20));
+
+
         // Create the Term-Document Incidence Matrix
         matrix = new int[terms.size()][documents.size()];
 
         for (int i = 0; i < documents.size(); i++) {
             String document = documents.get(i);
-            //System.out.println(documents.get(i));
-            //String[] words = document.split("\\s+");
-            //String[] words = wholeWords.get("words");
-            String[] words = globalWords.get(i);
-            //System.out.println(Arrays.toString(words));
-//            System.out.println(Arrays.toString(words));
-
+            List<String> words = globalWords.get(i);
 
             for (String word : words) {
                 //System.out.println(word);
                 int index = terms.indexOf(word);
-//                if (index < 0) System.err.println(index);
-//                else System.out.println(index);
-                matrix[index][i] = 1;
-//                if (index != -1){
-//                }
+                if (index != -1) {
+                    matrix[index][i] = 1;
+                }
             }
         }
 
+        System.out.println(terms.subList(1, 70));
+
         // Output the matrix to the console
-//        int c = 0;
 //        for (int i = 0; i < terms.size(); i++) {
-//            for (int j = 0; j < 1; j++) {
+//            for (int j = 0; j < documents.size(); j++) {
 //                if (matrix[i][j] == 1) {
-////                    c++;
 //                    System.out.println(matrix[i][j]);
 //                }
 //            }
 //        }
+
+
         bufferedReader.close();
         doneTermIndex = true;
 //        System.out.println(c);
     }
+
 
     public List<String> oneWordSearch(String wordToSearch) {
         List<String> foundDocuments = new ArrayList<>();
@@ -111,13 +135,13 @@ public class TermDocumentMatrix {
     }
 
     public List<String> andSearch(String textToSearch) {
-        String[] splitText = textToSearch.toLowerCase().split("\\s+");
+        String[] splitText = textToSearch.split("\\s+");
         System.out.println(Arrays.toString(splitText));
         List<String> foundDocuments = new ArrayList<>();
         int firstIndex, secondIndex;
-        if (terms.contains(splitText[0]) && terms.contains(splitText[2])) {
-            firstIndex = terms.indexOf(splitText[0]);
-            secondIndex = terms.indexOf(splitText[2]);
+        if (terms.contains(splitText[0].toLowerCase()) && terms.contains(splitText[2].toLowerCase())) {
+            firstIndex = terms.indexOf(splitText[0].toLowerCase());
+            secondIndex = terms.indexOf(splitText[2].toLowerCase());
         } else {
             firstIndex = -1;
             secondIndex = -1;
@@ -134,13 +158,13 @@ public class TermDocumentMatrix {
     }
 
     public List<String> orSearch(String textToSearch) {
-        String[] splitText = textToSearch.toLowerCase().split("\\s+");
+        String[] splitText = textToSearch.split("\\s+");
         System.out.println(Arrays.toString(splitText));
         List<String> foundDocuments = new ArrayList<>();
         int firstIndex, secondIndex;
-        if (terms.contains(splitText[0]) || terms.contains(splitText[2])) {
-            firstIndex = terms.indexOf(splitText[0]);
-            secondIndex = terms.indexOf(splitText[2]);
+        if (terms.contains(splitText[0].toLowerCase()) || terms.contains(splitText[2].toLowerCase())) {
+            firstIndex = terms.indexOf(splitText[0].toLowerCase());
+            secondIndex = terms.indexOf(splitText[2].toLowerCase());
         } else {
             firstIndex = -1;
             secondIndex = -1;
@@ -167,14 +191,14 @@ public class TermDocumentMatrix {
     }
 
     public List<String> notSearch(String textToSearch) {
-        List<String> splitText = List.of(textToSearch.toLowerCase().split("\\s+"));
+        List<String> splitText = List.of(textToSearch.split("\\s+"));
         List<String> foundDocuments = new ArrayList<>();
-        int indexOfNot = splitText.indexOf("not");
+        int indexOfNot = splitText.indexOf("NOT");
         int index;
         int indexOfNextWord = ++indexOfNot;
 
-        if (terms.contains(splitText.get(indexOfNextWord))) {
-            index = terms.indexOf(splitText.get(indexOfNextWord));
+        if (terms.contains(splitText.get(indexOfNextWord).toLowerCase())) {
+            index = terms.indexOf(splitText.get(indexOfNextWord).toLowerCase());
         } else {
             return documents;
         }
@@ -192,10 +216,10 @@ public class TermDocumentMatrix {
 
     public List<String> booleanSearch(String textToSearch) {
         List<String> localTerms;
-        localTerms = List.of(textToSearch.toLowerCase().split("\\s+"));
+        localTerms = List.of(textToSearch.split("\\s+"));
         if (localTerms.size() == 3) {
             switch (localTerms.get(1)) {
-                case "and" -> {
+                case "AND" -> {
                     List<String> resultOfAnd = andSearch(textToSearch);
                     if (resultOfAnd.isEmpty()) {
                         return List.of("Not Found with and query");
@@ -203,7 +227,7 @@ public class TermDocumentMatrix {
                         return resultOfAnd;
                     }
                 }
-                case "or" -> {
+                case "OR" -> {
                     List<String> resultOfOr = orSearch(textToSearch);
                     if (resultOfOr.isEmpty()) {
                         return List.of("Not Found with or query");
@@ -215,60 +239,60 @@ public class TermDocumentMatrix {
                     return List.of("Wrong query!!");
                 }
             }
-        } else if (localTerms.size() == 2 && (localTerms.indexOf("not")) == 0) {
+        } else if (localTerms.size() == 2 && (localTerms.indexOf("NOT")) == 0) {
             return notSearch(textToSearch);
         } else if (localTerms.size() == 4) {
 
-            if (localTerms.indexOf("not") == 0 ) {
+            if (localTerms.indexOf("NOT") == 0) {
                 List<String> firstResult = notSearch(localTerms.get(0) + " " + localTerms.get(1));
                 List<String> secondResult = oneWordSearch(localTerms.get(3));
                 Set<String> finalResult = new HashSet<>(firstResult);
-                if (localTerms.indexOf("and") == 2 ){
+                if (localTerms.indexOf("AND") == 2) {
                     finalResult.retainAll(secondResult);
-                } else if (localTerms.indexOf("or") == 2) {
-                     finalResult.addAll(secondResult);
-                } else {
-                     return List.of("Wrong query!!");
-                }
-                if (finalResult.isEmpty()){
-                    return List.of("Not found!!");
-                }else {
-
-                    return new ArrayList<>(finalResult);
-                }
-            } else if (localTerms.indexOf("not") == 2) {
-                List<String> firstResult = notSearch(localTerms.get(2) + " " + localTerms.get(3));
-                List<String> secondResult = oneWordSearch(localTerms.get(0));
-                List<String> finalResult = new ArrayList<>(firstResult);
-                if (localTerms.indexOf("and") == 1 ){
-                    finalResult.retainAll(secondResult);
-                } else if (localTerms.indexOf("or") == 1) {
+                } else if (localTerms.indexOf("OR") == 2) {
                     finalResult.addAll(secondResult);
                 } else {
                     return List.of("Wrong query!!");
                 }
-                if (finalResult.isEmpty()){
+                if (finalResult.isEmpty()) {
                     return List.of("Not found!!");
-                }else {
+                } else {
+
+                    return new ArrayList<>(finalResult);
+                }
+            } else if (localTerms.indexOf("NOT") == 2) {
+                List<String> firstResult = notSearch(localTerms.get(2) + " " + localTerms.get(3));
+                List<String> secondResult = oneWordSearch(localTerms.get(0));
+                List<String> finalResult = new ArrayList<>(firstResult);
+                if (localTerms.indexOf("AND") == 1) {
+                    finalResult.retainAll(secondResult);
+                } else if (localTerms.indexOf("OR") == 1) {
+                    finalResult.addAll(secondResult);
+                } else {
+                    return List.of("Wrong query!!");
+                }
+                if (finalResult.isEmpty()) {
+                    return List.of("Not found!!");
+                } else {
                     return new ArrayList<>(finalResult);
                 }
             }
         } else if (localTerms.size() == 5) {
 
-            if (localTerms.indexOf("not") == 0 && localTerms.lastIndexOf("not") == 3) {
+            if (localTerms.indexOf("NOT") == 0 && localTerms.lastIndexOf("NOT") == 3) {
                 List<String> firstResult = notSearch(localTerms.get(0) + " " + localTerms.get(1));
                 List<String> secondResult = notSearch(localTerms.get(3) + " " + localTerms.get(4));
                 List<String> finalResult = new ArrayList<>(firstResult);
-                if (localTerms.indexOf("and") == 2 ){
+                if (localTerms.indexOf("AND") == 2) {
                     finalResult.retainAll(secondResult);
-                } else if (localTerms.indexOf("or") == 2) {
+                } else if (localTerms.indexOf("OR") == 2) {
                     finalResult.addAll(secondResult);
                 } else {
                     return List.of("Wrong query!!");
                 }
-                if (finalResult.isEmpty()){
+                if (finalResult.isEmpty()) {
                     return List.of("Not found!!");
-                }else {
+                } else {
                     return new ArrayList<>(finalResult);
                 }
             }

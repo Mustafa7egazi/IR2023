@@ -4,6 +4,7 @@ module com.example.ir2023 {
     requires lucene.core;
     requires lucene.analyzers.common;
     requires lucene.queryparser;
+    requires org.apache.opennlp.tools;
 
 
     opens com.example.ir2023 to javafx.fxml;
