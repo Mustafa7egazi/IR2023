@@ -42,6 +42,12 @@ public class TermDocumentMatrix {
                     builder.append(line).append(" ");
                 }
                 String document = builder.toString().toLowerCase().trim();
+
+                // normalization preprocessing
+                if (HomeController.preprocessing.contains("Normalization")){
+                    document = normalizeText(document);
+                }
+
                 List<String> words = List.of(document.split("\\s+"));
 
 
@@ -102,9 +108,9 @@ public class TermDocumentMatrix {
         // Output the matrix to the console
 //        for (int i = 0; i < terms.size(); i++) {
 //            for (int j = 0; j < documents.size(); j++) {
-//                if (matrix[i][j] == 1) {
+//                //if (matrix[i][j] == 1) {
 //                    System.out.println(matrix[i][j]);
-//                }
+//                //}
 //            }
 //        }
 

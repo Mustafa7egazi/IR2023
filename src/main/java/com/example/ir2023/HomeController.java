@@ -1,9 +1,6 @@
 package com.example.ir2023;
 
-import com.example.algorithms.InvertedIndex;
-import com.example.algorithms.Lucene;
-import com.example.algorithms.PositionalIndex;
-import com.example.algorithms.TermDocumentMatrix;
+import com.example.algorithms.*;
 import com.example.util.Utilities;
 import javafx.animation.PauseTransition;
 import javafx.event.ActionEvent;
@@ -31,9 +28,11 @@ public class HomeController implements Initializable {
     InvertedIndex invertedIndexAlgo;
     Lucene luceneAlgo;
     PositionalIndex positionalIndexAlgo;
+    BiWordIndex biWordIndexAlgo;
 
 
-    public static final ArrayList<String> preprocessing = new ArrayList<>();
+    public static ArrayList<String> preprocessing;
+    public static ArrayList<String> preprocessingInSearch;
     private final ArrayList<CheckBox> checkBoxes = new ArrayList<>();
 
     private String selectedIndexingAlgorithm = "";
@@ -69,7 +68,7 @@ public class HomeController implements Initializable {
 
     //global vars
     List<String> queryMembers = new ArrayList<>();
-    String analyzedSearchText ="";
+    String analyzedSearchText = "";
 
     @FXML
     void onExitBtnClick() {
@@ -79,8 +78,14 @@ public class HomeController implements Initializable {
     @FXML
     void onFinishBtnClick() {
 
-        preprocessing.addAll(Arrays.asList("Tokenization", "Normalization"));
+        if (!preprocessing.isEmpty()) {
+            preprocessing = new ArrayList<>();
+        }
+        preprocessing.add("Tokenization");
 
+        if (indexingNormalizationCBox.isSelected()) {
+            preprocessing.add("Normalization");
+        }
         if (indexingLemetizationCBox.isSelected()) {
             preprocessing.add("Lemetization");
         }
@@ -90,6 +95,7 @@ public class HomeController implements Initializable {
         if (indexingStopWordsCBox.isSelected()) {
             preprocessing.add("Stop words");
         }
+
 
         if (!indexingTokenizationCBox.isSelected()) {
             showAlert("For better result, you should select Tokenization for processing.");
@@ -173,8 +179,26 @@ public class HomeController implements Initializable {
                 pt.play();
 
             } else {
-                showAlert("Not implemented yet");
-                System.out.println("Not implemented yet");
+                try {
+                    biWordIndexAlgo = new BiWordIndex();
+                } catch (FileNotFoundException e) {
+                    System.out.println(e.getMessage());
+                }
+                loadingIndicator.setVisible(true);
+                PauseTransition pt = new PauseTransition();
+                pt.setDuration(Duration.seconds(1));
+                pt.setOnFinished(e -> {
+                    try {
+                        biWordIndexAlgo.performBiWordIndex();
+                    } catch (IOException ex) {
+                        System.out.println(ex.getMessage());
+                    } finally {
+                        System.out.println("Finish indexing");
+                        loadingIndicator.setVisible(false);
+                        doneLabel.setVisible(true);
+                    }
+                });
+                pt.play();
             }
 
         }
@@ -183,10 +207,36 @@ public class HomeController implements Initializable {
     @FXML
     void onSearchBtnClick() throws IOException {
 
-        doneLabel.setVisible(false);
-        if (!searchingTokenizationCBox.isSelected()) {
-            showAlert("For better result, you should select Tokenization for searching.");
 
+        if (!preprocessingInSearch.isEmpty()) {
+            preprocessingInSearch = new ArrayList<>();
+        }
+        preprocessingInSearch.add("Tokenization");
+
+        if (searchingNormalizationCBox.isSelected()) {
+            preprocessingInSearch.add("Normalization");
+        }
+        if (searchingLemetizationCBox.isSelected()) {
+            preprocessingInSearch.add("Lemetization");
+        }
+        if (searchingStemmingCBox.isSelected()) {
+            preprocessingInSearch.add("Stemming");
+        }
+        if (searchingStopWordsCBox.isSelected()) {
+            preprocessingInSearch.add("Stop words");
+        }
+
+
+        doneLabel.setVisible(false);
+        if (!preprocessing.equals(preprocessingInSearch)) {
+
+            showAlert("For indexing you choose\n" +
+                    preprocessing +
+                    "\n\nfor better result, you should select the same for searching.");
+
+
+            System.out.println(preprocessing);
+            System.out.println(preprocessingInSearch);
         } else {
             String searchText = searchField.getText();
             if (searchingIdexChoiceBox.getValue().equals("Term-incidence")) {
@@ -220,6 +270,7 @@ public class HomeController implements Initializable {
                 processAndAnalyzeSearchText(searchText);
 
                 String[] split = analyzedSearchText.split(" ");
+
                 if (split.length == 3 || split.length == 4 || split.length == 5) {
                     showSearchResultDocs(invertedIndexAlgo.booleanSearch(analyzedSearchText.trim()));
                 } else if (split.length == 2) {
@@ -240,36 +291,39 @@ public class HomeController implements Initializable {
                     System.out.println(e.getMessage());
                 }
             } else if (searchingIdexChoiceBox.getValue().equals("Positional-index")) {
+
                 processAndAnalyzeSearchText(searchText);
 
-                String[] split = analyzedSearchText.split(" ");
-                if (split.length == 3 || split.length == 4 || split.length == 5) {
+                List<String> split = List.of(analyzedSearchText.split(" "));
+                if ((split.size() == 3 || split.size() == 4 || split.size() == 5) &&
+                        (split.contains("AND") || split.contains("OR") || split.contains("NOT"))) {
                     showSearchResultDocs(positionalIndexAlgo.booleanSearch(analyzedSearchText.trim()));
-                } else if (split.length == 2) {
-                    if (split[0].equals("NOT")) {
-                        showSearchResultDocs(positionalIndexAlgo.notSearch(analyzedSearchText.trim()));
-                    } else {
-                        showAlert("Wrong query formulation!!");
-                    }
-                } else if (split.length == 1) {
+                } else if (split.size() == 2 && split.get(0).equals("NOT")) {
+                    showSearchResultDocs(positionalIndexAlgo.notSearch(analyzedSearchText.trim()));
+                } else if (split.size() == 1) {
                     showSearchResultDocs(positionalIndexAlgo.oneWordSearch(analyzedSearchText.trim()));
                 } else {
-                    showAlert("Un supported query!!");
+                    showSearchResultDocs(positionalIndexAlgo.search(analyzedSearchText.trim()));
                 }
             } else {
-                showAlert("Not implemented yet!");
+                processAndAnalyzeSearchText(searchText);
+                showSearchResultDocs(biWordIndexAlgo.search(analyzedSearchText.trim()));
             }
         }
     }
 
     private List<String> analyzeQuery(List<String> queryWords) throws IOException {
         List<String> newQueryWords = queryWords;
+        if (preprocessing.contains("Normalization") && (indexingNormalizationCBox.isSelected())) {
+            newQueryWords = Utilities.normalizeQueryText(newQueryWords);
+        }
+
         if (preprocessing.contains("Stemming") && (indexingStemmingCBox.isSelected())) {
-            newQueryWords =  Utilities.applyStemming(newQueryWords);
+            newQueryWords = Utilities.applyStemming(newQueryWords);
         }
 
         if (preprocessing.contains("Stop words") && (indexingStopWordsCBox.isSelected())) {
-            newQueryWords =  Utilities.applyStopWordsRemoval(newQueryWords);
+            newQueryWords = Utilities.applyStopWordsRemoval(newQueryWords);
         }
 
 //        if (preprocessing.contains("Lemetization") && (indexingLemetizationCBox.isSelected())) {
@@ -285,7 +339,7 @@ public class HomeController implements Initializable {
         System.out.println(queryMembers);
 
         StringBuilder solidQuery = new StringBuilder();
-        for (String word:queryMembers) {
+        for (String word : queryMembers) {
             if (word.equals("AND") || word.equals("OR") || word.equals("NOT"))
                 solidQuery.append(word).append(" ");
             else
@@ -293,7 +347,7 @@ public class HomeController implements Initializable {
         }
 
         analyzedSearchText = solidQuery.toString();
-        System.out.println(analyzedSearchText);
+        System.out.println("analyzed: -> " + analyzedSearchText);
     }
 
     @Override
@@ -317,24 +371,11 @@ public class HomeController implements Initializable {
 
         indexingIdexChoiceBox.setOnAction(this::getIndexTypeSelection);
 
+        preprocessing = new ArrayList<>();
+        preprocessingInSearch = new ArrayList<>();
+
     }
 
-    @FXML
-    void onCheckBoxChange() {
-
-        for (CheckBox checkBox : checkBoxes) {
-            manipulateCheckboxes(checkBox);
-        }
-    }
-
-    private void manipulateCheckboxes(CheckBox c) {
-        if (c.isSelected()) {
-            if (!preprocessing.contains(c.getText()))
-                preprocessing.add(c.getText());
-        } else {
-            preprocessing.remove(c.getText());
-        }
-    }
 
     private void getIndexTypeSelection(ActionEvent event) {
         selectedIndexingAlgorithm = indexingIdexChoiceBox.getValue();

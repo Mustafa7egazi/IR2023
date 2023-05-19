@@ -1,22 +1,45 @@
 package com.example.util;
 
-import opennlp.tools.lemmatizer.LemmatizerME;
-import opennlp.tools.lemmatizer.LemmatizerModel;
-import org.tartarus.snowball.ext.PorterStemmer;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import org.tartarus.snowball.ext.PorterStemmer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+
+
 public class Utilities {
+
+
+    // normalizing text (removes punctuation and unite the letter case)
+    public static String normalizeText(String input) {
+        String result = input.toLowerCase(); // convert to lowercase
+        result = result.replaceAll("\\p{Punct}", ""); // remove all punctuation
+        result = result.replaceAll("(?<=\\p{Lu})\\s(?=\\p{Lu})", ""); // remove spaces between uppercase abbreviations
+        //result = result.replaceAll("\\s", ""); // remove all remaining whitespace
+        return result;
+    }
+
+    public static List<String> normalizeQueryText(List<String> inputList) {
+        List<String> outputList = new ArrayList<>();
+        for (String input : inputList) {
+            String result = input;
+           if (!result.equals("AND") && !result.equals("OR") && !result.equals("NOT")) {
+                result = input.toLowerCase(); // convert to lowercase
+           }
+               result = result.replaceAll("[\\p{Punct}&&[^*]]", ""); // remove all punctuation
+               result = result.replaceAll("(?<=\\p{Lu})\\s(?=\\p{Lu})", ""); // remove spaces between uppercase abbreviations
+               //result = result.replaceAll("\\s", ""); // remove all remaining whitespace
+               outputList.add(result);
+
+        }
+        return outputList;
+    }
 
 
     // stop words preprocessing
     public static List<String> applyStopWordsRemoval(List<String> terms) {
-        List<String> filteredTokens = new ArrayList<String>();
+        List<String> filteredTokens = new ArrayList<>();
         for (String token : terms) {
             if (!Arrays.asList(STOP_WORDS).contains(token)) {
                 filteredTokens.add(token);
@@ -39,29 +62,57 @@ public class Utilities {
 
     // Lemetization preprocessing
 
-    public static List<String> applyLemmetization(List<String> terms) throws IOException {
-
-        // Load the lemmatizer model
-        InputStream modelIn = new FileInputStream("en-lemmatizer.bin");
-        LemmatizerModel model = new LemmatizerModel(modelIn);
-        modelIn.close();
-
-        // Create a lemmatizer object using the model
-        LemmatizerME lemmatizer = new LemmatizerME(model);
-
-        // Lemmatize the terms
-        String[] lemmas = lemmatizer.lemmatize(terms.toArray(new String[0]), new String[terms.size()]);
-
-        // Print the lemmas
-//        for (int i = 0; i < lemmas.length; i++) {
-//            System.out.println("Original term: " + terms.get(i));
-//            System.out.println("Lemma: " + lemmas[i]);
+//    public static String lemmatize(String inputStrings) {
+//        // Set up the properties for the pipeline
+//        Properties props = new Properties();
+//        props.setProperty("annotators", "tokenize, ssplit, pos, lemma");
+//
+//        // Create the pipeline
+//        StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
+//
+//        // Create an annotation object with the input text
+//        Annotation document = new Annotation(inputStrings);
+//
+//        // Run the pipeline on the annotation object
+//        pipeline.annotate(document);
+//
+//        // Get the list of sentences from the annotation object
+//        List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
+//
+//        // Create a StringBuilder to store the lemmatized output
+//        StringBuilder sb = new StringBuilder();
+//
+//        // Loop over each sentence in the list of sentences
+//        for (CoreMap sentence : sentences) {
+//            // Get the list of tokens from the sentence
+//            List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
+//
+//            // Loop over each token in the list of tokens
+//            for (CoreLabel token : tokens) {
+//                // Get the lemma for the token
+//                String lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
+//
+//                // Append the lemma to the StringBuilder
+//                sb.append(lemma);
+//                sb.append(" ");
+//            }
 //        }
+//
+//        // Return the lemmatized output as a string
+//        return sb.toString().trim();
+//    }
 
-        return List.of(lemmas);
+    public static void main(String[] args) {
+        String input = "This is a sample text! It contains U.S.A and punctuation marks.";
+        String output = normalizeText(input);
+        List<String> h = new ArrayList<>();
+        h.add("U.S.A");
+        h.add(", is a one of the biggest! countries.");
+        h.add("isn't it?");
+        System.out.println(h);
+        System.out.println("-------------------after------------------");
+        System.out.println(normalizeQueryText(h));
     }
-
-
 
 
     public static final String[] STOP_WORDS = {

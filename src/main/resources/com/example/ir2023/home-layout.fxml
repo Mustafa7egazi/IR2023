@@ -55,7 +55,7 @@
                               <Font name="Ubuntu Bold" size="20.0" />
                            </font>
                         </Label>
-                        <CheckBox fx:id="indexingTokenizationCBox" layoutX="520.0" layoutY="100.0" mnemonicParsing="false" onAction="#onCheckBoxChange" text="Tokenization" textAlignment="CENTER" textFill="WHITE">
+                        <CheckBox fx:id="indexingTokenizationCBox" layoutX="520.0" layoutY="100.0" mnemonicParsing="false" text="Tokenization" textAlignment="CENTER" textFill="WHITE">
                            <font>
                               <Font name="Ubuntu Bold" size="16.0" />
                            </font>
@@ -63,7 +63,7 @@
                               <DropShadow />
                            </effect>
                         </CheckBox>
-                        <CheckBox fx:id="indexingNormalizationCBox" layoutX="520.0" layoutY="142.0" mnemonicParsing="false" onAction="#onCheckBoxChange" text="Normalization" textAlignment="CENTER" textFill="WHITE">
+                        <CheckBox fx:id="indexingNormalizationCBox" layoutX="520.0" layoutY="142.0" mnemonicParsing="false" text="Normalization" textAlignment="CENTER" textFill="WHITE">
                            <font>
                               <Font name="Ubuntu Bold" size="16.0" />
                            </font>
@@ -71,7 +71,7 @@
                               <DropShadow />
                            </effect>
                         </CheckBox>
-                        <CheckBox fx:id="indexingStemmingCBox" layoutX="520.0" layoutY="180.0" mnemonicParsing="false" onAction="#onCheckBoxChange" text="Stemming" textAlignment="CENTER" textFill="WHITE">
+                        <CheckBox fx:id="indexingStemmingCBox" layoutX="520.0" layoutY="180.0" mnemonicParsing="false" text="Stemming" textAlignment="CENTER" textFill="WHITE">
                            <font>
                               <Font name="Ubuntu Bold" size="16.0" />
                            </font>
@@ -79,7 +79,7 @@
                               <DropShadow />
                            </effect>
                         </CheckBox>
-                        <CheckBox fx:id="indexingLemetizationCBox" layoutX="692.0" layoutY="100.0" mnemonicParsing="false" onAction="#onCheckBoxChange" text="Lemetization" textAlignment="CENTER" textFill="WHITE">
+                        <CheckBox fx:id="indexingLemetizationCBox" layoutX="692.0" layoutY="100.0" mnemonicParsing="false" text="Lemetization" textAlignment="CENTER" textFill="WHITE">
                            <font>
                               <Font name="Ubuntu Bold" size="16.0" />
                            </font>
@@ -87,7 +87,7 @@
                               <DropShadow />
                            </effect>
                         </CheckBox>
-                        <CheckBox fx:id="indexingStopWordsCBox" layoutX="692.0" layoutY="142.0" mnemonicParsing="false" onAction="#onCheckBoxChange" text="Stop words" textAlignment="CENTER" textFill="WHITE">
+                        <CheckBox fx:id="indexingStopWordsCBox" layoutX="692.0" layoutY="142.0" mnemonicParsing="false" text="Stop words" textAlignment="CENTER" textFill="WHITE">
                            <font>
                               <Font name="Ubuntu Bold" size="16.0" />
                            </font>

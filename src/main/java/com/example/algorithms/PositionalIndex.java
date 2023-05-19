@@ -1,19 +1,19 @@
 package com.example.algorithms;
 
 import com.example.ir2023.HomeController;
+import javafx.geometry.Pos;
 
 import java.io.*;
 import java.util.*;
 
-import static com.example.util.Utilities.applyStemming;
-import static com.example.util.Utilities.applyStopWordsRemoval;
+import static com.example.util.Utilities.*;
 
 public class PositionalIndex {
     private final Map<String, Map<String, List<Integer>>> indexMap; // Map each term to a map of documents and their positions
     private final BufferedReader bufferedReader;
     private final List<String> terms, documents;
     private final Dictionary<String, List<String>> wholeWords;
-    private final List<List<String>> globalWords;
+    private static List<List<String>> globalWords;
 
     public PositionalIndex() throws FileNotFoundException {
         indexMap = new HashMap<>();
@@ -39,6 +39,12 @@ public class PositionalIndex {
                     builder.append(line).append(" ");
                 }
                 String document = builder.toString().toLowerCase().trim();
+
+                // normalization preprocessing
+                if (HomeController.preprocessing.contains("Normalization")){
+                    document = normalizeText(document);
+                }
+
                 List<String> words = Arrays.asList(document.split("\\s+"));
 
                 // TODO: preprocessing activation
@@ -83,9 +89,9 @@ public class PositionalIndex {
         }
 
         // Print the index map
-//        for (String term : indexMap.keySet()) {
-//            System.out.println(term + ": " + indexMap.get(term));
-//        }
+        for (String term : indexMap.keySet()) {
+            System.out.println(term + ": " + indexMap.get(term));
+        }
     }
 
 
@@ -260,55 +266,80 @@ public class PositionalIndex {
     }
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException {
+        PositionalIndex p = new PositionalIndex();
         try {
-            PositionalIndex pI = new PositionalIndex();
-            pI.performPositionalIndex();
-            System.out.println( pI.booleanSearch("biographies AND NOT Dewey"));
+            p.performPositionalIndex();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        System.out.println("------------------------- Global  -------------------");
+        System.out.print(globalWords.get(0));
+
+
+        System.out.println("-------------------------------Result -----------------------------");
+        String s = "The present study".toLowerCase();
+        System.out.println(s+"\n"+p.search(s));
+        //System.out.println(s+"\n"+p.search(s).size());
     }
 
-//    public List<String> search(String query) {
-//        String[] terms = query.toLowerCase().split("\\s+");
-//        List<String> results = new ArrayList<>();
-//
-//        // Find the documents that contain the first term in the query
-//        List<String> initialDocs = indexMap.get(terms[0]);
-//
-//        // Loop through each of those documents and check if they contain the remaining terms
-//        for (String doc : initialDocs) {
-//            List<Integer> positions = new ArrayList<>();
-//            List<String> words = wholeWords.get(doc);
-//            for (int i = 0; i < words.size(); i++) {
-//                if (words.get(i).equals(terms[0])) {
-//                    positions.add(i);
-//                }
-//            }
-//            boolean found = true;
-//            for (int i = 1; i < terms.length; i++) {
-//                List<Integer> newPositions = new ArrayList<>();
-//                for (int j = 0; j < positions.size(); j++) {
-//                    int pos = positions.get(j) + i;
-//                    if (pos >= words.size() || !words.get(pos).equals(terms[i])) {
+    public List<String> search(String query) {
+        String[] terms = query.toLowerCase().split("\\s+");
+        List<String> results = new ArrayList<>();
+
+        // Find the documents that contain the first term in the query
+        Set<String> initialDocs =  indexMap.get(terms[0]).keySet();
+        System.out.println("inital docs");
+        System.out.println(initialDocs);
+
+        // Loop through each of those documents and check if they contain the remaining terms
+        for (String doc : initialDocs) {
+            List<Integer> positions = new ArrayList<>();
+            int docId = Integer.parseInt(doc);
+            List<String> words = globalWords.get((docId)-1);
+            System.out.println("words");
+            System.out.println(words);
+            for (int i = 0; i < words.size(); i++) {
+                if (words.get(i).equals(terms[0])) {
+                    positions.add(i);
+                }
+            }
+
+            System.out.println("positions");
+            System.out.println(positions);
+            boolean found = true;                                  // the police arrived
+                                                                   // the doctor arrived
+            for (int i = 1; i < terms.length; i++) {
+                List<Integer> newPositions = new ArrayList<>();
+                for (int j = 0; j < positions.size(); j++) {
+                    int pos = positions.get(j) + 1;
+//                    if (positions.size() < (positions.get(j) +i)){
+//                        //continue
+//                        pos = positions.get(j) + 1;
+//                    }
+//                    else {
+//                        pos = positions.get(j) + i;
+//                    }
+                    if (!(pos >= words.size()) && words.get(pos).equals(terms[i])) {
+                        newPositions.add(pos);
 //                        found = false;
 //                        break;
-//                    } else {
-//                        newPositions.add(pos);
-//                    }
-//                }
-//                if (!found) {
-//                    break;
-//                }
-//                positions = newPositions;
-//            }
-//            if (found) {
-//                results.add(doc);
-//            }
-//        }
-//        return results;
-//    }
-
+                    }
+                }
+                if (newPositions.isEmpty()) {
+                    found = false;
+                    break;
+                }
+                positions = newPositions;
+                System.out.println("newwwwwwwwwww positions");
+                System.out.println(positions);
+            }
+            if (found) {
+                results.add(doc);
+            }
+        }
+        return results;
+    }
 
 }

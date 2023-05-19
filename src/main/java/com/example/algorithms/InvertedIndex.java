@@ -38,6 +38,13 @@ public class InvertedIndex {
                     builder.append(line).append(" ");
                 }
                 String document = builder.toString().toLowerCase().trim();
+
+
+                // normalization preprocessing
+                if (HomeController.preprocessing.contains("Normalization")){
+                    document = normalizeText(document);
+                }
+
                 List<String> words = List.of(document.split("\\s+"));
 
 
@@ -45,9 +52,11 @@ public class InvertedIndex {
 //                    words = applyLemmetization(words);
 //                }
 
+                // stemming preprocessing
                 if (HomeController.preprocessing.contains("Stemming")) {
                     words = applyStemming(words);
                 }
+                // stop words removal preprocessing
                 if (HomeController.preprocessing.contains("Stop words")) {
                     words = applyStopWordsRemoval(words);
                 }
